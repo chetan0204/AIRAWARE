@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<header>
+    <a href="home.html" class="home-icon">
+        <img src="C:\Users\cheta\OneDrive\Desktop\AIRAWARE\assests\home.png" alt="Go to Homepage">
+    </a>
+    <nav>
+        </nav>
+</header>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Air Pollution Analytics Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  /* --- CSS Variables for easy theming --- */
+ .home-icon {
+    /* Positioning */
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1001;
+    
+    /* Size for the glossy background circle */
+    width: 40px;  /* Reduced size */
+    height: 40px; /* Reduced size */
+    border-radius: 50%;
+    
+    /* --- GLOSSY BACKGROUND --- */
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.3) 70%, rgba(255, 255, 255, 0.1));
+    border: 1px solid rgba(255, 255, 255, 0.4); /* Subtle border */
+    box-shadow: 
+        0 4px 6px rgba(0, 0, 0, 0.2), /* Main shadow */
+        inset 0 1px 0 rgba(255, 255, 255, 0.8), /* Top highlight for gloss */
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1); /* Bottom shadow for gloss */
+
+    /* Centering the icon */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* Transition for hover effect */
+    transition: all 0.3s ease;
+}
+
+.home-icon:hover {
+    transform: translateY(-2px) scale(1.05); /* Lighter lift and scale */
+    box-shadow: 
+        0 6px 10px rgba(0, 0, 0, 0.3), /* Enhanced main shadow */
+        inset 0 1px 0 rgba(255, 255, 255, 0.9), /* Stronger highlight */
+        inset 0 -1px 0 rgba(0, 0, 0, 0.15); /* Stronger bottom shadow */
+}
+
+/* Styles the actual image inside the glossy circle */
+.home-icon img {
+    width: 20px; /* Adjust icon size to fit well within the 40px circle */
+    height: 20px;
+}
+:root {
+    --bg-color: #1a1a2e;
+    --primary-text: #e0e0e0;
+    --secondary-text: #a0a0b0;
+    --accent-color: #00e5ff;
+    --panel-bg: rgba(23, 23, 43, 0.6);
+    --panel-border: rgba(255, 255, 255, 0.1);
+  }
+
+  body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--bg-color);
+    background-image: radial-gradient(circle at 10% 20%, rgba(0, 229, 255, 0.1), transparent 30%),
+                      radial-gradient(circle at 80% 90%, rgba(127, 0, 255, 0.1), transparent 30%);
+    color: var(--primary-text);
+    margin: 0;
+    padding: 20px;
+  }
+  
+  .dashboard-container {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    text-align: center;
+    color: #fff;
+    font-weight: 600;
+    letter-spacing: 1px;
+    margin-bottom: 30px;
+  }
+
+  #tabs {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+    gap: 10px;
+  }
+
+  .tab {
+    padding: 10px 20px;
+    background: transparent;
+    color: var(--secondary-text);
+    cursor: pointer;
+    border-radius: 8px;
+    border: 1px solid var(--panel-border);
+    transition: all 0.3s ease;
+    font-weight: 400;
+  }
+
+  .tab:hover {
+    background: var(--panel-bg);
+    color: var(--accent-color);
+  }
+  .tab.active {
+    background: var(--accent-color);
+    color: var(--bg-color);
+    font-weight: 600;
+    border-color: var(--accent-color);
+  }
+
+  .chartPanel {
+    display: none;
+    background: var(--panel-bg);
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--panel-border);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    animation: fadeIn 0.5s ease;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .chart-wrapper {
+    width: 100%;
+  }
+  
+  #insightPanel {
+    margin-top: 20px;
+    padding: 15px;
+    font-size: 16px;
+    line-height: 1.6;
+    background-color: rgba(0,0,0,0.2);
+    border-radius: 8px;
+    color: var(--secondary-text);
+    min-height: 50px;
+    transition: background-color 0.3s;
+  }
+  #insightPanel strong {
+    color: var(--accent-color);
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<div class="dashboard-container">
+  <h1>🌍 Global Air Pollution Analytics</h1>
+
+  <nav id="tabs">
+    <button class="tab active" onclick="showPanel('line', this)">📈 Trend Analysis</button>
+    <button class="tab" onclick="showPanel('bar', this)">📊 Yearly Comparison</button>
+    <button class="tab" onclick="showPanel('pie', this)">🗂 Pollution Sources</button>
+  </nav>
+
+  <div id="line" class="chartPanel" style="display:block;">
+    <div class="chart-wrapper"><canvas id="lineChart"></canvas></div>
+  </div>
+
+  <div id="bar" class="chartPanel">
+    <div class="chart-wrapper"><canvas id="barChart"></canvas></div>
+  </div>
+
+  <div id="pie" class="chartPanel">
+    <div class="chart-wrapper"><canvas id="pieChart"></canvas></div>
+  </div>
+  
+  <div id="insightPanel">
+    <p>Hover over a chart for detailed insights.</p>
+  </div>
+</div>
+
+<script>
+  // --- CHART DATA ---
+  // --- UPDATED & FACT-BASED CHART DATA (2015-2025) ---
+const labels = ["2015", "2016", "2017", "2018", "2019", "2020", "2021", "2022", "2023", "2024", "2025"];
+
+// PM2.5 (µg/m³): Shows a dip in 2020 and a spike in 2023 from wildfires.
+const pm25 = [35, 37, 38, 39, 40, 38, 41, 42, 45, 46, 47];
+
+// CO₂ (ppm): Shows a continuous rise, barely affected by the pandemic.
+const co2 = [400, 402, 404, 406, 408, 410, 413, 415, 417, 419, 421];
+
+// NO₂ (µg/m³): Shows the sharpest dip in 2020 from reduced traffic, followed by a rebound and recent stabilization.
+const no2 = [20, 21, 22, 23, 24, 19, 22, 24, 25, 24, 23];
+
+// SO₂ (µg/m³): Shows an industrial slowdown in 2020 and a slow decline in recent years due to cleaner energy.
+const so2 = [10, 11, 11, 12, 13, 11, 13, 14, 15, 14, 13];
+
+const insightPanel = document.getElementById('insightPanel');
+  
+  // --- GLOBAL CHART DEFAULTS ---
+  Chart.defaults.color = 'rgba(224, 224, 224, 0.8)';
+  Chart.defaults.borderColor = 'rgba(224, 224, 224, 0.2)';
+  Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(26, 26, 46, 0.9)';
+  Chart.defaults.plugins.tooltip.titleColor = '#fff';
+  Chart.defaults.plugins.tooltip.bodyColor = '#e0e0e0';
+
+  // --- LINE CHART ---
+  const lineCtx = document.getElementById("lineChart").getContext("2d");
+  const lineChart = new Chart(lineCtx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [
+        { label: 'PM2.5 (µg/m³)', data: pm25, borderColor: '#ff6384', backgroundColor: 'rgba(255, 99, 132, 0.2)', fill: true, tension: 0.4 },
+        { label: 'CO₂ (ppm)', data: co2, borderColor: '#36a2eb', backgroundColor: 'rgba(54, 162, 235, 0.2)', fill: true, tension: 0.4 },
+        { label: 'NO₂ (µg/m³)', data: no2, borderColor: '#ffce56', backgroundColor: 'rgba(255, 206, 86, 0.2)', fill: true, tension: 0.4 },
+        { label: 'SO₂ (µg/m³)', data: so2, borderColor: '#9966ff', backgroundColor: 'rgba(153, 102, 255, 0.2)', fill: true, tension: 0.4 }
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: {
+          onHover: (e, legendItem) => {
+            const chart = e.chart;
+            chart.data.datasets.forEach((d, i) => {
+              chart.setDatasetVisibility(i, i === legendItem.datasetIndex);
+            });
+            chart.update();
+          },
+          onLeave: (e) => {
+            const chart = e.chart;
+            chart.data.datasets.forEach((d, i) => {
+              chart.setDatasetVisibility(i, true);
+            });
+            chart.update();
+          }
+        }
+      },
+      onHover: (event, chartElement) => {
+        if (chartElement.length > 0) {
+          const index = chartElement[0].index;
+          const year = labels[index];
+          insightPanel.innerHTML = `<p>In <strong>${year}</strong>, PM2.5 was <strong>${pm25[index]} µg/m³</strong> and CO₂ was <strong>${co2[index]} ppm</strong>.</p>`;
+        } else {
+          insightPanel.innerHTML = '<p>Hover over a point on the line chart to see specific yearly data.</p>';
+        }
+      }
+    }
+  });
+
+  // --- BAR CHART ---
+  const barCtx = document.getElementById("barChart").getContext("2d");
+  const barChart = new Chart(barCtx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [
+        { label: 'PM2.5', data: pm25, backgroundColor: 'rgba(255, 99, 132, 0.7)' },
+        { label: 'NO₂', data: no2, backgroundColor: 'rgba(255, 206, 86, 0.7)' }
+      ]
+    },
+    options: { responsive: true, scales: { y: { beginAtZero: true } } }
+  });
+
+  // --- PIE CHART ---
+  const pieCtx = document.getElementById("pieChart").getContext("2d");
+  const pieChart = new Chart(pieCtx, {
+    type: 'pie',
+    data: {
+      labels: ['Industrial', 'Transport', 'Residential', 'Agriculture', 'Other'],
+      datasets: [{
+        data: [35, 25, 20, 15, 5],
+        backgroundColor: ['#ff6384', '#36a2eb', '#ffce56', '#4bc0c0', '#9966ff'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      onHover: (event, chartElement) => {
+        if (chartElement.length > 0) {
+          const index = chartElement[0].index;
+          const source = pieChart.data.labels[index];
+          const value = pieChart.data.datasets[0].data[index];
+          insightPanel.innerHTML = `<p>The <strong>${source}</strong> sector contributes <strong>${value}%</strong> to global air pollution.</p>`;
+        } else {
+           insightPanel.innerHTML = '<p>Hover over a pie segment to see its contribution percentage.</p>';
+        }
+      }
+    }
+  });
+
+  // --- TAB SWITCHING LOGIC ---
+  function showPanel(panelId, activeTab) {
+    const panels = document.querySelectorAll('.chartPanel');
+    panels.forEach(p => p.style.display = 'none');
+    document.getElementById(panelId).style.display = 'block';
+
+    const tabs = document.querySelectorAll('.tab');
+    tabs.forEach(t => t.classList.remove('active'));
+    activeTab.classList.add('active');
+    
+    // Reset insight panel on tab change
+    insightPanel.innerHTML = '<p>Hover over a chart for detailed insights.</p>';
+  }
+</script>
+
+</body>
+</html>

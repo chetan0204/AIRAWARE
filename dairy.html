@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<header>
+    <a href="home.html" class="home-icon">
+        <img src="C:\Users\cheta\OneDrive\Desktop\AIRAWARE\assests\home.png" alt="Go to Homepage">
+    </a>
+    <nav>
+        </nav>
+</header>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Air Quality Diary</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+
+/* UPDATED: CSS for the home icon */
+.home-icon {
+    /* Positioning */
+    position: fixed;
+    top: 20px;
+    left: 20px;
+    z-index: 1001;
+    
+    /* Size for the glossy background circle */
+    width: 40px;  /* Reduced size */
+    height: 40px; /* Reduced size */
+    border-radius: 50%;
+    
+    /* --- GLOSSY BACKGROUND --- */
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.3) 70%, rgba(255, 255, 255, 0.1));
+    border: 1px solid rgba(255, 255, 255, 0.4); /* Subtle border */
+    box-shadow: 
+        0 4px 6px rgba(0, 0, 0, 0.2), /* Main shadow */
+        inset 0 1px 0 rgba(255, 255, 255, 0.8), /* Top highlight for gloss */
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1); /* Bottom shadow for gloss */
+
+    /* Centering the icon */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* Transition for hover effect */
+    transition: all 0.3s ease;
+}
+
+.home-icon:hover {
+    transform: translateY(-2px) scale(1.05); /* Lighter lift and scale */
+    box-shadow: 
+        0 6px 10px rgba(0, 0, 0, 0.3), /* Enhanced main shadow */
+        inset 0 1px 0 rgba(255, 255, 255, 0.9), /* Stronger highlight */
+        inset 0 -1px 0 rgba(0, 0, 0, 0.15); /* Stronger bottom shadow */
+}
+
+/* Styles the actual image inside the glossy circle */
+.home-icon img {
+    width: 20px; /* Adjust icon size to fit well within the 40px circle */
+    height: 20px;
+}  :root {
+    --card-bg: rgba(255, 255, 255, 0.7);
+    --shadow-color: rgba(31, 58, 77, 0.2);
+    --border-color: rgba(255, 255, 255, 0.4);
+    --text-dark: #1f3a4d;
+    --text-light: #4a6a8a;
+    --accent-color: #3b82f6;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Poppins', sans-serif;
+    color: var(--text-dark);
+    overflow: hidden;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(#87CEEB 0%, #BEE7FF 60%, #EAF6FF 100%);
+  }
+  
+  .bg-element { transition: transform 0.5s ease-out; }
+  .sun { position: fixed; top: 8%; right: 8%; width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle at 35% 35%,#fff7c2,#ffe28a 25%,#ffd166 60%,transparent 80%); filter: blur(6px); opacity: 0.9; z-index: -2; }
+  .cloud { position: fixed; background: #fff; border-radius: 50px; opacity: 0.9; z-index: -1; }
+  .cloud::before, .cloud::after { content: ""; position: absolute; background: inherit; border-radius: 50%; }
+  .cloud.static.c1 { top: 15%; left: 10%; width: 200px; height: 70px; }
+  .cloud.static.c1::before { width: 90px; height: 90px; left: 20px; top: -30px; }
+  .cloud.static.c1::after { width: 70px; height: 70px; right: 20px; top: -20px; }
+  .cloud.static.c2 { top: 50%; right: 15%; width: 150px; height: 60px; }
+  .cloud.static.c2::before { width: 70px; height: 70px; left: 15px; top: -25px; }
+  .cloud.static.c2::after { width: 50px; height: 50px; right: 15px; top: -20px; }
+  .cloud.animated { animation: float linear infinite; }
+  .cloud.big { width: 300px; height: 100px; top: 20%; left: -40%; animation-duration: 90s; }
+  .cloud.big::before { width: 120px; height: 120px; left: 30px; top: -40px; }
+  .cloud.big::after { width: 100px; height: 100px; right: 30px; top: -30px; }
+  @keyframes float { from { transform: translateX(0); } to { transform: translateX(150vw); } }
+
+  #mainScreen {
+    width: 90%;
+    max-width: 600px;
+    background: var(--card-bg);
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px var(--shadow-color);
+    text-align: center;
+    border: 1px solid var(--border-color);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  h2 { font-size: 1.8em; color: var(--text-dark); margin: 0; }
+  
+  #noteForm { display: flex; flex-direction: column; gap: 10px; width: 100%; }
+  textarea { width: 100%; height: 70px; border-radius: 8px; border: 1px solid var(--border-color); padding: 10px; font-family: inherit; font-size: 1em; background: rgba(255,255,255,0.5); resize: vertical; color: var(--text-dark); }
+  textarea:focus { outline: 2px solid var(--accent-color); }
+  input[type="file"] { display: none; }
+  .file-upload-label { display: inline-block; padding: 10px 20px; background-color: #eee; color: var(--text-light); border-radius: 8px; cursor: pointer; transition: background-color 0.2s; }
+  .file-upload-label:hover { background-color: #ddd; }
+  
+  /* --- ADDED: Style for the filename display --- */
+  .file-name-display {
+    font-size: 0.9em;
+    font-style: italic;
+    color: var(--text-light);
+    margin-top: 5px;
+    min-height: 1.2em; /* Prevents layout shift */
+  }
+
+  button { padding: 10px 20px; cursor: pointer; border: none; border-radius: 8px; font-family: inherit; font-size: 1em; font-weight: bold; transition: all 0.2s ease-in-out; }
+  button:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,0,0,0.15); }
+  .btn-primary { background-color: var(--accent-color); color: white; }
+  .btn-edit { background-color: #ffc107; color: white; }
+  .btn-delete { background-color: #dc3545; color: white; }
+  .btn-image { background-color: #17a2b8; color: white; }
+
+  #notes { width: 100%; display: flex; flex-direction: column; gap: 15px; margin-top: 10px; text-align: left; }
+  .note { background: rgba(255, 255, 255, 0.8); padding: 15px; border-radius: 12px; box-shadow: 0 4px 10px var(--shadow-color); animation: fadeIn 0.4s ease; position: relative; word-wrap: break-word; padding-bottom: 50px; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  .note img { max-width: 100%; margin-top: 10px; border-radius: 8px; }
+  .note .comment { font-size: 0.9em; color: var(--text-light); margin-top: 8px; font-style: italic; }
+  .noteButtons { position: absolute; bottom: 10px; right: 10px; display: flex; gap: 5px; }
+  .noteButtons button { padding: 5px 10px; font-size: 0.8em; }
+</style>
+</head>
+<body>
+
+
+<div class="sun bg-element"></div>
+<div class="cloud static c1 bg-element"></div>
+<div class="cloud static c2 bg-element"></div>
+<div class="cloud animated big"></div>
+
+<div id="mainScreen">
+  <h2>My Air Quality Diary</h2>
+  <form id="noteForm" onsubmit="addNote(); return false;">
+    <textarea id="noteText" placeholder="How's the air today? Add a note..."></textarea>
+    
+    <div>
+        <label for="noteImage" class="file-upload-label">Add Image</label>
+        <input type="file" id="noteImage" accept="image/*">
+        <div id="file-name-display" class="file-name-display"></div>
+    </div>
+    
+    <button type="submit" class="btn-primary">Add Note</button>
+  </form>
+  <div id="notes"></div>
+</div>
+
+<script>
+  document.addEventListener('mousemove', (e) => {
+    const bgElements = document.querySelectorAll('.bg-element');
+    const mouseX = e.clientX / window.innerWidth;
+    const mouseY = e.clientY / window.innerHeight;
+
+    bgElements.forEach(el => {
+      const speed = el.classList.contains('sun') ? -20 : 15;
+      const x = (mouseX - 0.5) * speed;
+      const y = (mouseY - 0.5) * speed;
+      el.style.transform = `translateX(${x}px) translateY(${y}px)`;
+    });
+  });
+
+  // --- ADDED: JavaScript to show selected filename ---
+  const fileInput = document.getElementById('noteImage');
+  const fileNameDisplay = document.getElementById('file-name-display');
+
+  fileInput.addEventListener('change', () => {
+      if (fileInput.files.length > 0) {
+          fileNameDisplay.textContent = `Selected: ${fileInput.files[0].name}`;
+      } else {
+          fileNameDisplay.textContent = '';
+      }
+  });
+
+  function addNote(){
+    const text = document.getElementById('noteText').value.trim();
+    const imgFile = document.getElementById('noteImage').files[0];
+    if (!text && !imgFile) { alert("Please add some text or an image!"); return; }
+
+    const notesDiv = document.getElementById('notes');
+    const noteDiv = document.createElement('div');
+    noteDiv.className = 'note';
+    
+    const noteTextSpan = document.createElement('p');
+    noteTextSpan.textContent = text;
+    noteDiv.appendChild(noteTextSpan);
+    
+    const btnDiv = document.createElement('div');
+    btnDiv.className = 'noteButtons';
+
+    const finalizeNote = () => {
+      noteDiv.appendChild(btnDiv);
+      notesDiv.prepend(noteDiv);
+      document.getElementById('noteText').value = '';
+      fileInput.value = ''; // Reset the file input
+      fileNameDisplay.textContent = ''; // Clear the filename display
+    };
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'btn-edit';
+    editBtn.textContent = 'Edit';
+    editBtn.onclick = () => { const newText = prompt("Edit your note:", noteTextSpan.textContent); if (newText !== null) noteTextSpan.textContent = newText; }
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'btn-delete';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.onclick = () => { if (confirm("Delete this note?")) noteDiv.remove(); }
+
+    if (imgFile) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        const comment = document.createElement('div');
+        comment.className = 'comment';
+        comment.textContent = 'No comment yet';
+        noteDiv.append(img, comment);
+        
+        const delImgBtn = document.createElement('button');
+        delImgBtn.className = 'btn-delete';
+        delImgBtn.textContent = 'Del Img';
+        delImgBtn.onclick = () => { if (confirm("Delete image?")) { img.remove(); comment.remove(); delImgBtn.remove(); commentBtn.remove(); } }
+        
+        const commentBtn = document.createElement('button');
+        commentBtn.className = 'btn-image';
+        commentBtn.textContent = 'Comment';
+        commentBtn.onclick = () => { const newComment = prompt("Enter comment:", comment.textContent); if (newComment !== null) comment.textContent = newComment; }
+        
+        btnDiv.append(editBtn, commentBtn, delImgBtn, deleteBtn);
+        finalizeNote();
+      }
+      reader.readAsDataURL(imgFile);
+    } else {
+      btnDiv.append(editBtn, deleteBtn);
+      finalizeNote();
+    }
+  }
+</script>
+</body>
+</html>
