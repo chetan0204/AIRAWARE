@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AIR NAV - Air Quality Dashboard</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        /* --- THEME COLORS --- */
+        :root {
+            --color-primary: #007bff; /* Blue for action/chart */
+            --color-header-bg: #343a40; /* Darker gray for header */
+            --color-background: #f8f9fa; /* Light gray/off-white for body */
+            --color-card-bg: #ffffff; /* White for content panels */
+            --color-text-dark: #212529; /* Dark text */
+            --color-text-muted: #6c757d; /* Muted text */
+            --color-success: #28a745;
+            --color-warning: #fd7e14;
+            --color-danger: #dc3545;
+        }
+
+        /* --- CSS STYLES --- */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            background-color: var(--color-background); /* Applied new background color */
+            height: 100vh;
+        }
+        header { 
+            background-color: var(--color-header-bg); /* Applied new header color */
+            color: white; 
+            text-align: center; 
+            padding: 1rem; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        main { 
+            display: flex; 
+            padding: 20px; 
+            gap: 20px; 
+            height: calc(100vh - 84px);
+        }
+        #map { 
+            height: 100%;
+            flex: 2; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+            transition: flex 0.3s;
+        }
+
+        /* Forecast/Chart Container */
+        .chart-container {
+            flex: 1;
+            background: var(--color-card-bg); /* White card background */
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: none; 
+            flex-direction: column; 
+            height: 100%;
+            box-sizing: border-box;
+            position: relative; 
+            min-width: 300px;
+        }
+        
+        #forecastChart {
+            flex-grow: 1; 
+            min-height: 0; 
+        }
+
+        /* CLOSE BUTTON STYLING */
+        #close-forecast-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            border: none;
+            background: none;
+            font-size: 28px;
+            cursor: pointer;
+            color: var(--color-text-muted);
+            line-height: 1;
+            z-index: 10; 
+            transition: color 0.2s, background-color 0.2s;
+            padding: 5px;
+            border-radius: 50%;
+        }
+
+        #close-forecast-btn:hover {
+            color: var(--color-danger); 
+            background-color: #f8d7da;
+        }
+
+        #chart-title {
+            margin-top: 5px;
+            margin-bottom: 25px;
+            font-size: 1.3rem;
+            color: var(--color-text-dark); 
+            padding-right: 40px; 
+        }
+        
+        /* Leaflet Popup Styles for marker info */
+        .custom-popup .leaflet-popup-content-wrapper { background: transparent; box-shadow: none; border-radius: 12px; }
+        .custom-popup .leaflet-popup-content { margin: 0; padding: 0; }
+        .popup-container {
+            width: 280px; 
+            background: var(--color-card-bg); 
+            box-shadow: 0 6px 15px rgba(0,0,0,0.2); 
+            border-radius: 12px; 
+            padding: 18px; 
+            font-size: 14px;
+        }
+        .popup-header {
+            display: flex; align-items: center; gap: 8px; font-weight: 700; 
+            font-size: 1.1rem; margin-bottom: 15px; 
+            color: var(--color-primary); /* Changed to primary blue */
+        }
+        .popup-header .fa-wind { color: var(--color-primary); } /* Icon color to primary blue */
+        .popup-body p { margin: 8px 0; color: var(--color-text-muted); } /* Muted text */
+        .popup-body strong { color: var(--color-text-dark); }
+        .popup-body i { width: 15px; text-align: center; margin-right: 5px; color: var(--color-text-muted); }
+        .progress-bar {
+            width: 100%; height: 25px; background-color: #e9ecef;
+            border-radius: 12px; overflow: hidden; margin-top: 5px;
+        }
+        .progress-bar-fill {
+            height: 100%; color: white; text-align: right; 
+            line-height: 25px; font-weight: bold; font-size: 13px;
+            padding-right: 8px;
+            transition: width 0.5s ease-out;
+        }
+        
+        /* User Location Marker Style (Blue Icon) */
+        .user-location-icon {
+            color: var(--color-primary);
+            font-size: 28px;
+            text-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>AIR NAV</h1>
+    </header>
+
+    <main>
+        <div id="map"></div>
+        
+        <div class="chart-container" id="forecast-page">
+            
+            <button id="close-forecast-btn" aria-label="Close Forecast" title="Close Forecast">&times;</button>
+            
+            <h2 id="chart-title">Select a station to see the forecast</h2>
+            <canvas id="forecastChart"></canvas>
+            
+            <div id="forecast-details">
+                <p style="margin-top: 15px; color: var(--color-text-muted); font-style: italic; border-top: 1px solid #eee; padding-top: 15px;">
+                    This chart displays the simulated PM2.5 trend (µg/m³) for the next 24 hours based on the selected location.
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // --- JAVASCRIPT LOGIC ---
+
+        // DOM Elements
+        const forecastPage = document.getElementById('forecast-page');
+        const forecastChartCanvas = document.getElementById('forecastChart');
+        const chartTitle = document.getElementById('chart-title');
+        const closeButton = document.getElementById('close-forecast-btn');
+
+        let map, forecastChart;
+        let userMarker = null; // Variable to hold the user's location marker
+
+        // --- Simulated Data and Utility Functions ---
+
+        /**
+         * Generates a random, smooth 24-hour PM2.5 forecast based on a starting value.
+         * @param {number} baseValue - The starting PM2.5 concentration.
+         * @returns {number[]} - Array of 24 hourly PM2.5 values.
+         */
+        function generateRandomForecast(baseValue) {
+            const forecast = [baseValue];
+            let currentValue = baseValue;
+            for (let i = 1; i < 24; i++) {
+                // Fluctuation: -2 to +2
+                const fluctuation = Math.random() * 4 - 2; 
+                currentValue += fluctuation;
+                // Ensure the value stays within a reasonable range (e.g., 5 to 60)
+                currentValue = Math.max(5, Math.min(60, currentValue)); 
+                forecast.push(Math.round(currentValue * 10) / 10);
+            }
+            return forecast;
+        }
+
+        // Mock Data setup (Using LA coordinates as before)
+        const MOCK_DATA = [
+            { location: "Downtown LA", coordinates: { latitude: 34.0522, longitude: -118.2437 }, measurements: [{ value: 12.5 }] },
+            { location: "Santa Monica Pier", coordinates: { latitude: 34.0092, longitude: -118.4975 }, measurements: [{ value: 18.1 }] },
+            { location: "Pasadena", coordinates: { latitude: 34.1478, longitude: -118.1445 }, measurements: [{ value: 45.9 }] },
+        ];
+
+
+        // --- New Location Function ---
+
+        /**
+         * Accesses the user's current location using the Geolocation API.
+         * On success, it centers the map and places a marker.
+         */
+        function locateUser() {
+            if (!navigator.geolocation) {
+                console.error("Geolocation is not supported by this browser.");
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    const lat = position.coords.latitude;
+                    const lng = position.coords.longitude;
+                    const userLatLng = [lat, lng];
+
+                    // 1. Center the map on the user's location
+                    map.setView(userLatLng, 12); 
+
+                    // 2. Define a custom icon for the user's position
+                    const userIcon = L.divIcon({
+                        className: 'user-location-icon',
+                        html: '<i class="fa-solid fa-location-dot"></i>',
+                        iconSize: [28, 28],
+                        iconAnchor: [14, 28] // Position the tip of the icon at the coordinates
+                    });
+
+                    // 3. Remove existing user marker if present
+                    if (userMarker) {
+                        map.removeLayer(userMarker);
+                    }
+
+                    // 4. Create the new user marker
+                    userMarker = L.marker(userLatLng, { icon: userIcon }).addTo(map);
+
+                    // 5. Bind a simple popup
+                    userMarker.bindPopup("<b>Your Current Location</b>").openPopup();
+
+                    // Optional: Simulate AQI data for the user's current location
+                    // This creates data for a simulated forecast when the user clicks their marker
+                    const userPM25 = Math.round((Math.random() * 30) + 10); // Random PM2.5 for user's area
+                    const userData = {
+                        location: "Your Location",
+                        measurements: [{ 
+                            value: userPM25,
+                            forecast: generateRandomForecast(userPM25)
+                        }]
+                    };
+
+                    // Update the popup with the custom report content on click
+                    userMarker.on('click', () => {
+                        userMarker.setPopupContent(createPopupContent(userData));
+                        updateChart(userData);
+                    });
+                },
+                (error) => {
+                    // Handle errors like permission denied
+                    console.error(`Geolocation error: ${error.message}`);
+                    // Optionally, show a message on the map or console
+                }
+            );
+        }
+
+        // --- Core Functions ---
+
+        /**
+         * Closes the forecast panel on the right.
+         */
+        function closeChartPanel() {
+            // Set display to none to hide the flex item
+            forecastPage.style.display = 'none'; 
+            chartTitle.innerText = "Select a station to see the forecast";
+        }
+        
+        /**
+         * Initializes the Leaflet map, loads station data, and attempts to locate the user.
+         */
+        async function initializeDashboard() {
+            // Setup Map
+            map = L.map('map').setView([34.0522, -118.2437], 10); // Default to LA if location fails
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // Attempt to locate the user immediately
+            locateUser(); 
+
+            // Load and display MOCK Stations
+            const data = MOCK_DATA; 
+
+            data.forEach(station => {
+                // Pre-generate forecast for mock data
+                station.measurements[0].forecast = generateRandomForecast(station.measurements[0].value);
+                
+                const coords = [station.coordinates.latitude, station.coordinates.longitude];
+                const pm25Value = station.measurements[0].value;
+                
+                // Determine marker color based on AQI value
+                let markerColor = 'var(--color-success)'; 
+                if (pm25Value >= 15 && pm25Value < 40) markerColor = 'var(--color-warning)';
+                if (pm25Value >= 40) markerColor = 'var(--color-danger)';
+
+                const circle = L.circleMarker(coords, {
+                    radius: 9,
+                    fillColor: markerColor,
+                    color: '#fff',
+                    weight: 3,
+                    opacity: 1,
+                    fillOpacity: 0.8
+                }).addTo(map);
+
+                // Bind custom popup
+                circle.bindPopup("Loading...", { className: 'custom-popup' });
+                
+                // Marker Click Handler: updates popup and chart
+                circle.on('click', () => {
+                    circle.setPopupContent(createPopupContent(station));
+                    updateChart(station); 
+                });
+            });
+
+            // Map Click Handler: generates temporary data and shows forecast
+            map.on('click', (e) => {
+                const lat = e.latlng.lat.toFixed(4);
+                const lng = e.latlng.lng.toFixed(4);
+
+                // Create data for the clicked point
+                const newStationData = {
+                    location: `Clicked Point (${lat}, ${lng})`,
+                    measurements: [{
+                        value: Math.round((Math.random() * 45) + 5), 
+                    }]
+                };
+                newStationData.measurements[0].forecast = generateRandomForecast(newStationData.measurements[0].value);
+
+                // Create a temporary marker (blue dot)
+                const newCircle = L.circleMarker(e.latlng, {
+                    radius: 8, 
+                    fillColor: 'var(--color-primary)', /* Use the primary blue */
+                    color: '#fff', 
+                    weight: 2, 
+                    opacity: 1, 
+                    fillOpacity: 0.8
+                }).addTo(map);
+
+                // Set popup content and open it
+                newCircle.bindPopup(createPopupContent(newStationData), { className: 'custom-popup' }).openPopup();
+                
+                // Show forecast for the clicked location
+                updateChart(newStationData);
+                
+                // Remove the temporary marker after 15 seconds to keep the map clean
+                setTimeout(() => {
+                    if (map.hasLayer(newCircle)) {
+                        map.removeLayer(newCircle);
+                    }
+                }, 15000);
+            });
+        }
+
+        /**
+         * Creates the HTML content for the Leaflet popup.
+         * @param {Object} station - The station data object.
+         * @returns {string} - HTML string for the popup.
+         */
+        function createPopupContent(station) {
+            const pm25Value = station.measurements[0].value;
+            let statusText = "Good";
+            let progressColor = 'var(--color-success)';
+            if (pm25Value >= 15 && pm25Value < 40) { statusText = 'Moderate'; progressColor = 'var(--color-warning)'; }
+            if (pm25Value >= 40) { statusText = 'Unhealthy'; progressColor = 'var(--color-danger)'; }
+            
+            // Normalize progress for display (cap at 100% of the bar's max context, 50 µg/m³)
+            const progressPercent = Math.min((pm25Value / 50) * 100, 100); 
+
+            return `
+                <div class="popup-container">
+                    <div class="popup-header"><i class="fas fa-wind"></i><span>Air Quality Report</span></div>
+                    <div class="popup-body">
+                        <p><i class="fas fa-map-marker-alt"></i><strong>Location:</strong> ${station.location}</p>
+                        <p><i class="fas fa-smog"></i><strong>PM2.5:</strong></p>
+                        <div class="progress-bar">
+                            <div class="progress-bar-fill" style="width: ${progressPercent}%; background-color: ${progressColor};">
+                                ${pm25Value} µg/m³
+                            </div>
+                        </div>
+                        <p style="margin-top: 15px;"><strong>Status:</strong> ${statusText}</p>
+                    </div>
+                </div>`;
+        }
+
+        /**
+         * Updates the chart panel with the forecast data and shows the panel.
+         * @param {Object} station - The station data object including the forecast array.
+         */
+        function updateChart(station) {
+            // 1. Show the forecast panel (using flex makes it occupy space correctly)
+            forecastPage.style.display = 'flex'; 
+            
+            // 2. Update title
+            chartTitle.innerText = `24-Hour Forecast for ${station.location}`;
+            
+            const forecastData = station.measurements[0].forecast;
+            if (!forecastData) { 
+                chartTitle.innerText = `Forecast data unavailable for ${station.location}`;
+                return;
+            }
+
+            // 3. Prepare Chart Data
+            const labels = Array.from({length: 24}, (_, i) => `${i}h`);
+
+            // 4. Destroy previous chart instance
+            if (forecastChart) forecastChart.destroy();
+            
+            // 5. Create new chart instance
+            forecastChart = new Chart(forecastChartCanvas, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'PM2.5 (µg/m³)',
+                        data: forecastData,
+                        borderColor: 'var(--color-primary)', /* New primary color for the line */
+                        backgroundColor: 'rgba(0, 123, 255, 0.1)', /* Light primary fill */
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 4,
+                        pointBackgroundColor: 'var(--color-primary)',
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false, 
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 60, 
+                            title: {
+                                display: true,
+                                text: 'PM2.5 Concentration (µg/m³)',
+                                color: 'var(--color-text-dark)'
+                            },
+                            ticks: {
+                                color: 'var(--color-text-muted)'
+                            },
+                            grid: {
+                                color: '#e9ecef'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Hours from Now',
+                                color: 'var(--color-text-dark)'
+                            },
+                            ticks: {
+                                color: 'var(--color-text-muted)'
+                            },
+                            grid: {
+                                color: '#e9ecef'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return ` PM2.5: ${context.parsed.y} µg/m³`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- Event Listeners and Initialization ---
+        closeButton.addEventListener('click', closeChartPanel);
+        initializeDashboard();
+    </script>
+</body>
+</html>

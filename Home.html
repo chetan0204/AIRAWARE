@@ -6,21 +6,211 @@
     <title>AIR AWARE - Air Quality Forecasting</title>
     <link rel="stylesheet" href="Home.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700&display=swap" rel="stylesheet">
+
+    <style>
+        /* --- General Chat Styles --- */
+        #aira-widget-container {
+            /* Fixed position in the bottom right */
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999; /* Ensure it's above other page content */
+            font-family: 'Georgia', serif; /* Keep for chat content readability */
+        }
+
+        /* Floating "Toggle Button" */
+        #aira-toggle-button {
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: #8b5e3c; /* Earth tone brown */
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+            font-size: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            transition: all 0.2s ease-in-out;
+        }
+
+        #aira-toggle-button:hover {
+            background: #7a5130;
+            transform: translateY(-2px);
+        }
+
+        /* Chatbox */
+        #chatbox {
+            width: 380px; /* Slightly wider for better space */
+            height: 500px; /* Taller */
+            background: #fdf6e3;
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 0 25px rgba(0,0,0,0.4);
+            position: absolute;
+            bottom: 75px; /* Position above the toggle button */
+            right: 0;
+            display: flex;
+            flex-direction: column;
+
+            /* Initially hide the chatbox with better transition */
+            transform: scale(0.5) translateX(50px);
+            transform-origin: bottom right;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.27, 1.55); /* Bounce effect */
+        }
+
+        #chatbox.open {
+            transform: scale(1) translateX(0);
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Chatbox Header */
+        #chatbox h2 {
+            font-family: 'Montserrat', sans-serif; /* Use your site's heading font */
+            font-weight: 700;
+            color: #3e2f1c;
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        #messages {
+            flex-grow: 1; /* Messages container takes up available space */
+            overflow-y: auto;
+            background: #fffaf5;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #e0d8c7; /* Subtle border */
+        }
+
+        .msg { margin: 8px 0; }
+        .user { font-weight: bold; color: #3e2f1c; }
+        .bot { color: #5a3e2b; }
+
+        /* Input and Send Button Layout */
+        #chatbox > div:nth-of-type(2) { /* Targeting the container for input and send button */
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        #userInput {
+            flex-grow: 1; /* Input takes up most space */
+            padding: 10px;
+            border-radius: 20px; /* Pill shape */
+            border: 1px solid #bfae9f;
+            box-sizing: border-box;
+        }
+
+        #chatbox button[onclick="sendMessage()"] {
+            padding: 10px 15px;
+            border-radius: 20px;
+            margin: 0;
+            background: #8b5e3c;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #chatbox button[onclick="sendMessage()"]:hover { background: #7a5130; }
+
+
+        /* Close Button (was backButton) */
+        #backButton {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            color: #8b5e3c;
+            font-size: 20px;
+            padding: 5px;
+            border: none;
+            cursor: pointer;
+            z-index: 20;
+            line-height: 1;
+        }
+        #backButton:hover { color: #7a5130; }
+
+
+        /* Quick action buttons container and layout */
+        #quickButtons {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px; /* Increase gap for spacing */
+            padding-top: 5px;
+            border-top: 1px dashed #e0d8c7;
+        }
+        #quickButtons button {
+            flex: 1 1 45%;
+            font-size: 13px;
+            padding: 8px 5px;
+            border-radius: 8px;
+            margin: 0;
+            background: #8b5e3c; /* Re-apply general button styles */
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #quickButtons button:hover { background: #7a5130; }
+
+        /* Breathing overlay (keep position fixed/full screen) */
+        #breathingOverlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(231, 211, 181, 0.98);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 10000;
+        }
+
+        #circle {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #8b5e3c;
+            animation: breathe 6s infinite;
+        }
+        @keyframes breathe {
+            0% { transform: scale(1); opacity: 0.6; }
+            50% { transform: scale(1.8); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.6; }
+        }
+
+        #prompt { margin-top: 20px; font-size: 20px; color: #3e2f1c; }
+
+        #breathingOverlay button {
+            background: #8b5e3c;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 15px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
 
     <header>
         <a href="#" class="logo-container">
-            <img src="C:\Users\cheta\OneDrive\Desktop\animationt - Copy\assests\clouds.svg" alt="Site Logo" class="logo">
+            <img src="C:\Users\cheta\OneDrive\Desktop\AIRAWARE\assests\cloud-removebg-preview.png" alt="Site Logo" class="logo">
         </a>
-        <nav>
+        <nav class="main-nav">
             <ul>
                 <li><a href="#">Home</a></li>
                 <li><a href="data.html">Analytics</a></li>
                 <li><a href="info.html">Health Info</a></li>
-                <li><a href="#">AirTales</a></li>
+                <li><a href="story.html">AirTales</a></li>
                 <li><a href="dairy.html">AirAware Diary</a></li>
-                <li><a href="#" class="cta-button">AIR Nav</a></li>
+                <li><a href="map.html" class="cta-button">AIR Nav</a></li>
             </ul>
         </nav>
     </header>
@@ -36,6 +226,179 @@
             <p>Your ultimate guide to real-time air quality forecasts and environmental insights.</p>
         </div>
     </main>
-    
+
+    <div id="aira-widget-container">
+
+        <button id="aira-toggle-button" onclick="toggleChat()">
+            🍃
+        </button>
+
+        <div id="chatbox">
+            <button id="backButton" onclick="toggleChat()">✕</button>
+            <h2>🍃 Aira – Your Breath Buddy</h2>
+            <div id="messages"></div>
+            <div>
+                <input type="text" id="userInput" placeholder="Type your message..." />
+                <button onclick="sendMessage()">Send</button>
+            </div>
+            <div id="quickButtons"></div>
+        </div>
+    </div>
+
+    <div id="breathingOverlay">
+        <div id="circle"></div>
+        <div id="prompt">Inhale…</div>
+        <button onclick="stopBreathing()" style="margin-top:20px;">Stop</button>
+    </div>
+
+    <script>
+        const messages = document.getElementById('messages');
+        const input = document.getElementById('userInput');
+        const quickButtonsDiv = document.getElementById('quickButtons');
+        const chatbox = document.getElementById('chatbox');
+        const toggleButton = document.getElementById('aira-toggle-button');
+
+        window.onload = function () {
+            messages.innerHTML = '';
+            input.addEventListener("keypress", function (e) {
+                if (e.key === "Enter") sendMessage();
+            });
+        };
+
+        function toggleChat() {
+            const isClosed = !chatbox.classList.contains('open');
+
+            if (isClosed) {
+                chatbox.classList.add('open');
+                toggleButton.innerHTML = '✕';
+                if (messages.children.length === 0) {
+                    appendMsg('bot', 'Hi there 🌿 How can I help you feel better today?');
+                    showQuickButtons();
+                }
+            } else {
+                chatbox.classList.remove('open');
+                toggleButton.innerHTML = '🍃';
+            }
+        }
+
+        function appendMsg(who, text, isHTML=false) {
+            const div = document.createElement('div');
+            div.className = 'msg ' + who;
+            if(isHTML) div.innerHTML = text;
+            else div.innerHTML = `<span class="${who}">${who==='user'?'You':'Aira'}:</span> ${text}`;
+            messages.appendChild(div);
+            messages.scrollTop = messages.scrollHeight;
+        }
+
+        // Show quick action buttons
+        function showQuickButtons() {
+            quickButtonsDiv.innerHTML = `
+                <button onclick="triggerAction('airQuality')">🌍 Air Quality</button>
+                <button onclick="triggerAction('hospitals')">🏥 Nearby Hospitals</button>
+                <button onclick="triggerAction('viewDiary')">📓 View Diary</button>
+                <button onclick="triggerAction('logDiary')">📝 Log Diary</button>
+                <button onclick="triggerAction('breathing')">🌬️ Breathing Exercise</button>
+            `;
+        }
+
+        // Trigger quick actions
+        function triggerAction(action) {
+            if(action==='airQuality') checkAQIAuto();
+            else if(action==='hospitals') findHospitals();
+            else if(action==='viewDiary') viewDiary();
+            else if(action==='logDiary') {
+                // *** RECTIFIED: Redirect to the diary HTML page ***
+                window.location.href = 'dairy.html';
+            }
+            else if(action==='breathing') startBreathing();
+        }
+
+        // Main send message function
+        function sendMessage() {
+            const msg = input.value.trim();
+            if(!msg) return;
+            appendMsg('user', msg);
+            input.value = '';
+
+            const lower = msg.toLowerCase();
+
+            // Simple keyword-based responses
+            let reply = "";
+            if(lower.includes('breath') || lower.includes('breathing')) reply = "Let's do a breathing exercise together 🌬";
+            else if(lower.includes('hospital')) reply = "You can find nearby hospitals using the button below.";
+            else if(lower.includes('diary')) reply = "Use the buttons below to log or view diary entries.";
+            else if(lower.includes('aqi') || lower.includes('air quality')) reply = "Checking the air quality near you…";
+            else reply = "I'm here to help 🌿 Use the buttons for quick actions or type your concern.";
+
+            appendMsg('bot', reply);
+            showQuickButtons();
+        }
+
+        // Breathing exercise (4-2-6 cycle)
+        function startBreathing() {
+            document.getElementById("breathingOverlay").style.display = "flex";
+            document.getElementById("prompt").textContent = "Inhale…";
+
+            const prompts = ["Inhale… (4s)", "Hold… (2s)", "Exhale… (6s)"];
+            const intervals = [4000, 2000, 6000];
+            let currentIntervalIndex = 0;
+
+            function runCycle() {
+                document.getElementById("prompt").textContent = prompts[currentIntervalIndex % prompts.length];
+                const duration = intervals[currentIntervalIndex % intervals.length];
+                currentIntervalIndex++;
+                startBreathing.timeout = setTimeout(runCycle, duration);
+            }
+
+            clearTimeout(startBreathing.timeout);
+            runCycle();
+        }
+
+        function stopBreathing() {
+            document.getElementById("breathingOverlay").style.display = "none";
+            clearTimeout(startBreathing.timeout);
+            appendMsg('bot', "Breathing exercise complete. How do you feel? 😌");
+            showQuickButtons();
+        }
+
+        // AQI check (Requires GeoLocation and external API)
+        function checkAQIAuto() {
+            if(!navigator.geolocation) {
+                appendMsg('bot', "Cannot access location. Using default advice 🌿");
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(async pos => {
+                const lat = pos.coords.latitude.toFixed(4);
+                const lng = pos.coords.longitude.toFixed(4);
+                const url = `https://api.openaq.org/v2/latest?coordinates=${lat},${lng}&radius=10000&limit=1`;
+                try {
+                    const res = await fetch(url);
+                    const data = await res.json();
+                    const pm25 = data.results?.[0]?.measurements.find(m=>m.parameter==='pm25')?.value;
+                    let status = "✅ Good air quality. Enjoy your day!";
+                    if(pm25>150) status="⚠ Unhealthy air. Stay indoors, wear a mask.";
+                    else if(pm25>75) status="😷 Moderate pollution. Sensitive groups should reduce exposure.";
+                    appendMsg('bot', `PM2.5 level near you: <b>${pm25 ?? 'N/A'}</b>. ${status}`, true);
+                } catch(e) {
+                    appendMsg('bot', "AQI check failed 😔 Try again later.");
+                }
+            }, ()=> appendMsg('bot', "Enable location services for AQI check 🌿"));
+        }
+
+        // Hospitals (Placeholder link)
+        function findHospitals() {
+            appendMsg('bot', `You can find nearby hospitals using Google Maps: <a href="https://www.google.com/maps/search/hospitals+near+me" target="_blank">Click here</a>`, true);
+        }
+
+        // Diary (View entries from localStorage)
+        function viewDiary() {
+            const logs = JSON.parse(localStorage.getItem("airDiary")||"[]");
+            if(logs.length===0) appendMsg('bot', "Your diary is empty 🌸");
+            else {
+                appendMsg('bot', "Here's what you've logged:");
+                logs.forEach(log=>appendMsg('bot', `📝 ${log.time}: ${log.text}`));
+            }
+        }
+    </script>
 </body>
 </html>
